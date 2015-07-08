@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Copyright 2014 Google Inc. All rights reserved.
+
+     Licensed under the Apache License, Version 2.0 (the "License");
+     you may not use this file except in compliance with the License.
+     You may obtain a copy of the License at
+
+          http://www.apache.org/licenses/LICENSE-2.0
+
+     Unless required by applicable law or agreed to in writing, software
+     distributed under the License is distributed on an "AS IS" BASIS,
+     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+     See the License for the specific language governing permissions and
+     limitations under the License.
+-->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    tools:context=".CameraCaptureActivity" >
+
+    <android.opengl.GLSurfaceView
+        android:id="@+id/cameraPreview_surfaceView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center" />
+
+
+    <!--<Button-->
+        <!--android:id="@+id/toggleRecording_button"-->
+        <!--style="?android:attr/buttonStyleSmall"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="@string/toggleRecordingOn"-->
+        <!--android:onClick="clickToggleRecording" />-->
+
+    <!--<Spinner-->
+        <!--android:id="@+id/cameraFilter_spinner"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_alignParentRight="true" />-->
+
+    <!-- these overlap with the SurfaceView; by default, it's underneath the UI layer -->
+
+    <TextView
+        android:id="@+id/cameraParams_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="[?]"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_alignTop="@+id/cameraPreview_surfaceView"
+        android:layout_toEndOf="@+id/processing_time_view"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/processing_time_view"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Processing time:"
+        android:id="@+id/textView"
+        android:layout_above="@+id/processing_time_view"
+        android:layout_alignParentStart="true"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:id="@+id/fps_view"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="FPS:"
+        android:id="@+id/textView2"
+        android:layout_above="@+id/fps_view"
+        android:layout_alignParentEnd="true"/>
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Save Frame"
+        android:id="@+id/save_frame_cb"
+        android:textStyle="bold"
+        android:textSize="15dp"
+        android:checked="false"
+        android:layout_alignParentTop="true"
+        android:layout_alignEnd="@+id/fps_view"/>
+
+    <Spinner
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/convert_method_spinner"
+        android:layout_below="@+id/save_frame_cb"
+        android:layout_alignEnd="@+id/fps_view"
+        android:spinnerMode="dropdown"/>
+
+    <Spinner
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/convert_mode_spinner"
+        android:layout_below="@+id/convert_method_spinner"
+        android:layout_alignParentEnd="true"/>
+
+    <!--<TextView-->
+        <!--android:id="@+id/cameraOutputFileLabel"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_alignLeft="@id/cameraParams_text"-->
+        <!--android:layout_below="@id/cameraParams_text"-->
+        <!--android:text="@string/cameraOutputFileLabel_text" />-->
+
+    <!--<TextView-->
+        <!--android:id="@+id/cameraOutputFile_text"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_alignBaseline="@id/cameraOutputFileLabel"-->
+        <!--android:layout_alignBottom="@id/cameraOutputFileLabel"-->
+        <!--android:layout_toRightOf="@id/cameraOutputFileLabel"-->
+        <!--android:paddingLeft="4dp"-->
+        <!--android:text="@string/cameraOutputFile_text" />-->
+
+</RelativeLayout>

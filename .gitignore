@@ -1,0 +1,9 @@
+*.o
+*build*
+.gradle/
+.idea
+obj
+*.pro*
+*.iml
+gradlew*
+gradle/

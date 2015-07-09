@@ -1,0 +1,10 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:tools="http://schemas.android.com/tools"
+      tools:context="com.walletone.camlib.CamTextureViewActivity">
+    <item android:id="@+id/supported_preview_sizes"
+          android:title="Supported preview sizes"
+          android:orderInCategory="100"
+          android:showAsAction="" />
+    <item android:id="@+id/supported_preview_fps"
+          android:title="Supported preview fps" />
+</menu>

@@ -1,4 +1,4 @@
-package com.example.cam;
+package com.walletone.camlib;
 
 /**
  * Created by Daniel Daniel's on 29.06.15.
@@ -23,7 +23,7 @@ public class CamTestLib {
     }
 
     public enum TextureConvertMode {
-        LRTBStride,
+        LRTBStripe,
         Card,
         FullFrame
     }

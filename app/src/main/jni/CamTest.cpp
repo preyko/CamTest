@@ -27,18 +27,18 @@
 
 ///////////////////////////////////////////////////////////
 /////////////////////// DEFINES ///////////////////////////
-const char* kCamTestLib_GlTexture_class_name = "com/example/cam/CamTestLib$GlTexture";
+const char* kCamTestLib_GlTexture_class_name = "com/walletone/camlib/CamTestLib$GlTexture";
 
 enum CamTestLib_TextureSaveMethod {
     FBO, PBO, RFBO
 };
 
-static const float REL_PROP = 0.2f;
-static const int   STRIDE_THICKNESS = 16;
-
 enum ExtractType {
-    LRTBStride = 0, CardRect = 1, FullFrame = 2
+    LRTBStripe = 0, CardRect = 1, FullFrame = 2
 };
+
+static const float REL_PROP = 0.2f;
+static const int   STRIPE_THICKNESS = 16;
 
 
 
@@ -55,11 +55,11 @@ struct {
 } gCamTestLib_GlTexture_fields;
 
 struct {
-    // Keep size input to detect moment when we could reset Converters
+    // Keep size input for detection of the moment when we should reset converters
     cv::Size mInputSize;
 
-    RFBOTextureConverter mLRStrideConverter; // Used for converting left and rigth strides
-    RFBOTextureConverter mTBStrideConverter; // Used for converting top and bottom strides
+    RFBOTextureConverter mLRStripeConverter; // Used for converting left and rigth stripes
+    RFBOTextureConverter mTBStripeConverter; // Used for converting top and bottom stripes
 
     RFBOTextureConverter mCardRectConverter; // Used for card rect converting
 
@@ -72,23 +72,23 @@ struct {
 
         mCardRect = cv::Rect(lt, rb);
 
-        mLeftStride   = cv::Rect(lt, cv::Size(STRIDE_THICKNESS, mCardRect.height));
-        mRightStride  = cv::Rect(rt - cv::Point(STRIDE_THICKNESS, 0), cv::Size(STRIDE_THICKNESS, mCardRect.height));
-        mTopStride    = cv::Rect(lt, cv::Size(mCardRect.width, STRIDE_THICKNESS));
-        mBottomStride = cv::Rect(lb - cv::Point(0, STRIDE_THICKNESS), cv::Size(mCardRect.width, STRIDE_THICKNESS));
+        mLeftStripe   = cv::Rect(lt, cv::Size(STRIPE_THICKNESS, mCardRect.height));
+        mRightStripe  = cv::Rect(rt - cv::Point(STRIPE_THICKNESS, 0), cv::Size(STRIPE_THICKNESS, mCardRect.height));
+        mTopStripe    = cv::Rect(lt, cv::Size(mCardRect.width, STRIPE_THICKNESS));
+        mBottomStripe = cv::Rect(lb - cv::Point(0, STRIPE_THICKNESS), cv::Size(mCardRect.width, STRIPE_THICKNESS));
     }
 
-    // Strides
-    cv::Rect mLeftStride;
-    cv::Rect mRightStride;
-    cv::Rect mTopStride;
-    cv::Rect mBottomStride;
+    // Stripes regions
+    cv::Rect mLeftStripe;
+    cv::Rect mRightStripe;
+    cv::Rect mTopStripe;
+    cv::Rect mBottomStripe;
 
     // Card rect
     cv::Rect mCardRect;
 
     // Current extract type
-    ExtractType mCurrentType = LRTBStride;
+    ExtractType mCurrentType = LRTBStripe;
 } state;
 
 void save_image_with_random_name(const cv::Mat& img) {
@@ -111,8 +111,9 @@ jint JNI_OnLoad(JavaVM* vm, void*) {
 
     // Get CamTestLib.GlTexture class
     jclass gltexture_class = env->FindClass(kCamTestLib_GlTexture_class_name);
+
     if (!gltexture_class) {
-        __android_log_print(ANDROID_LOG_DEBUG, TAG, "failed to get %s class reference", kCamTestLib_GlTexture_class_name);
+        LOGD("failed to get %s class reference", kCamTestLib_GlTexture_class_name);
         return -1;
     }
 
@@ -125,14 +126,14 @@ jint JNI_OnLoad(JavaVM* vm, void*) {
 
 ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////
-JNIEXPORT void JNICALL Java_com_example_cam_CamTestLib_nativeSetImageSavePath
+JNIEXPORT void JNICALL Java_com_walletone_camlib_CamTestLib_nativeSetImageSavePath
   (JNIEnv* env, jclass c, jstring path) {
     gImageSavePath = as_std_string(env, path);
 
     __android_log_print(ANDROID_LOG_INFO, TAG, "New image save path: %s", gImageSavePath.c_str());
 }
 
-JNIEXPORT void JNICALL Java_com_example_cam_CamTestLib_nativeSetTextureSaveMethod
+JNIEXPORT void JNICALL Java_com_walletone_camlib_CamTestLib_nativeSetTextureSaveMethod
   (JNIEnv* env, jclass c, jint method) {
 
     std::string name;
@@ -141,10 +142,12 @@ JNIEXPORT void JNICALL Java_com_example_cam_CamTestLib_nativeSetTextureSaveMetho
         gCurrentConverter.reset(new FBOTextureConverter);
         name = "FBO method";
         break;
+    #if 0
     case PBO:
         gCurrentConverter.reset(new PBOTextureConverter);
         name = "PBO method";
         break;
+    #endif
     case RFBO:
         gCurrentConverter.reset(new RFBOTextureConverter);
         name = "RFBO method";
@@ -157,14 +160,14 @@ JNIEXPORT void JNICALL Java_com_example_cam_CamTestLib_nativeSetTextureSaveMetho
     LOGD("New convert method is set: %s", name.c_str());
 }
 
-JNIEXPORT void JNICALL Java_com_example_cam_CamTestLib_nativeSetConvertMode
+JNIEXPORT void JNICALL Java_com_walletone_camlib_CamTestLib_nativeSetConvertMode
   (JNIEnv* env, jclass c, jint mode) {
     state.mCurrentType = (ExtractType) mode;
 
     std::string name;
     switch (mode) {
-    case LRTBStride:
-        name = "LRTB Stride";
+    case LRTBStripe:
+        name = "LRTB Stripe";
         break;
     case CardRect:
         name = "CardRect";
@@ -180,7 +183,7 @@ JNIEXPORT void JNICALL Java_com_example_cam_CamTestLib_nativeSetConvertMode
     LOGD("New convert mode is set: %s", name.c_str());
 }
 
-JNIEXPORT void JNICALL Java_com_example_cam_CamTestLib_nativeSaveTexture
+JNIEXPORT void JNICALL Java_com_walletone_camlib_CamTestLib_nativeSaveTexture
   (JNIEnv* env, jclass c, jobject o, jint width, jint height, jboolean save_image) {
     ASSERT(gCurrentConverter.get() != nullptr, "Failed to save texture: call CamTestLib.setTextureSaveMethod() before!");
 
@@ -190,8 +193,8 @@ JNIEXPORT void JNICALL Java_com_example_cam_CamTestLib_nativeSaveTexture
     GLTextureDescriptor texture { texture_id, target_id };
 
     if (state.mInputSize != cv::Size(width, height)) {
-        state.mLRStrideConverter = RFBOTextureConverter();
-        state.mTBStrideConverter = RFBOTextureConverter();
+        state.mLRStripeConverter = RFBOTextureConverter();
+        state.mTBStripeConverter = RFBOTextureConverter();
 
         state.mCardRectConverter = RFBOTextureConverter();
 
@@ -201,22 +204,22 @@ JNIEXPORT void JNICALL Java_com_example_cam_CamTestLib_nativeSaveTexture
     }
 
     switch (state.mCurrentType) {
-        case LRTBStride: {
-            cv::Mat lstride(state.mLeftStride.height, state.mLeftStride.width, CV_8UC4);
-            cv::Mat rstride(state.mLeftStride.height, state.mLeftStride.width, CV_8UC4);
-            cv::Mat tstride(state.mTopStride.height,  state.mTopStride.width, CV_8UC4);
-            cv::Mat bstride(state.mTopStride.height,  state.mTopStride.width, CV_8UC4);
+        case LRTBStripe: {
+            cv::Mat lstripe(state.mLeftStripe.height, state.mLeftStripe.width, CV_8UC4);
+            cv::Mat rstripe(state.mLeftStripe.height, state.mLeftStripe.width, CV_8UC4);
+            cv::Mat tstripe(state.mTopStripe.height,  state.mTopStripe.width, CV_8UC4);
+            cv::Mat bstripe(state.mTopStripe.height,  state.mTopStripe.width, CV_8UC4);
 
-            state.mLRStrideConverter.convert(lstride, state.mLeftStride,   texture);
-            state.mLRStrideConverter.convert(rstride, state.mRightStride,  texture);
-            state.mTBStrideConverter.convert(tstride, state.mTopStride,    texture);
-            state.mTBStrideConverter.convert(bstride, state.mBottomStride, texture);
+            state.mLRStripeConverter.convert(lstripe, state.mLeftStripe,   texture);
+            state.mLRStripeConverter.convert(rstripe, state.mRightStripe,  texture);
+            state.mTBStripeConverter.convert(tstripe, state.mTopStripe,    texture);
+            state.mTBStripeConverter.convert(bstripe, state.mBottomStripe, texture);
 
             if (save_image) {
-                save_image_with_random_name(lstride);
-                save_image_with_random_name(rstride);
-                save_image_with_random_name(tstride);
-                save_image_with_random_name(bstride);
+                save_image_with_random_name(lstripe);
+                save_image_with_random_name(rstripe);
+                save_image_with_random_name(tstripe);
+                save_image_with_random_name(bstripe);
             }
         } break;
         case CardRect: {

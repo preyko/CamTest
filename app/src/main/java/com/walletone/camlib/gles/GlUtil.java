@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package com.example.cam.gles;
+package com.walletone.camlib.gles;
 
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.pm.ConfigurationInfo;
-import android.opengl.GLES10;
 import android.opengl.GLES20;
 import android.opengl.GLES30;
 import android.opengl.Matrix;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.cam;
+package com.walletone.camlib;
 
 import android.graphics.SurfaceTexture;
 import android.opengl.EGLContext;
@@ -24,10 +24,10 @@ import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
-import com.example.cam.gles.EglCore;
-import com.example.cam.gles.FullFrameRect;
-import com.example.cam.gles.Texture2dProgram;
-import com.example.cam.gles.WindowSurface;
+import com.walletone.camlib.gles.EglCore;
+import com.walletone.camlib.gles.FullFrameRect;
+import com.walletone.camlib.gles.Texture2dProgram;
+import com.walletone.camlib.gles.WindowSurface;
 
 import java.io.File;
 import java.io.IOException;

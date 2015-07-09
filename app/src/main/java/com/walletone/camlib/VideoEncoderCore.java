@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.cam;
+package com.walletone.camlib;
 
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.cam;
+package com.walletone.camlib;
 
 import android.app.Activity;
 import android.hardware.Camera;
@@ -29,6 +29,21 @@ import java.util.List;
  */
 public class CameraUtils {
     private static final String TAG = CameraUtils.class.getName();
+
+    /**
+     * Compares two sizes
+     * @param s1 - first size
+     * @param s2 - second size
+     * @return 1 if s1 > s2, 0 if equal, -1 if s1 < s2
+     */
+    private static int compare(Camera.Size s1, Camera.Size s2) {
+        int s1a = s1.width * s1.height;
+        int s2a = s2.width * s2.height;
+        if (s1.equals(s2))
+            return 0;
+        else
+            return s1a > s2a ? 1 : -1;
+    }
 
     /**
      * Attempts to find a preview size that matches the provided width and height (which
@@ -47,15 +62,40 @@ public class CameraUtils {
                     ppsfv.width + "x" + ppsfv.height);
         }
 
-        //for (Camera.Size size : parms.getSupportedPreviewSizes()) {
-        //    Log.d(TAG, "supported: " + size.width + "x" + size.height);
-        //}
-
+        int best_diff = Integer.MAX_VALUE;
+        Camera.Size result = null;
         for (Camera.Size size : parms.getSupportedPreviewSizes()) {
-            if (size.width == width && size.height == height) {
-                parms.setPreviewSize(width, height);
-                return;
+            int diff = size.width * size.height - width * height;
+            if (size.width >= width && size.height >= height && diff < best_diff) {
+                result = size;
+                best_diff = diff;
             }
+        }
+
+        if (result != null) {
+            parms.setPreviewSize(result.width, result.height);
+            return;
+        }
+
+        // Try to find nearest preview size
+        for (Camera.Size size : parms.getSupportedPreviewSizes()) {
+            if (size.width <= width && size.height <= height) {
+                if (result == null) {
+                    result = size;
+                } else {
+                    int result_area = result.width * result.height;
+                    int new_area = size.width * size.height;
+
+                    if (new_area > result_area) {
+                        result = size;
+                    }
+                }
+            }
+        }
+
+        if (result != null) {
+            parms.setPreviewSize(result.width, result.height);
+            return;
         }
 
         Log.w(TAG, "Unable to set preview size to " + width + "x" + height);
@@ -104,9 +144,10 @@ public class CameraUtils {
      *  Camera API
      * @param parameters - Camera parameters
      * @param minimumFps - bottom bound of FPS
-     * @return true - if desired FPS range or fixed (old API) fps is set, false - otherwise
+     * @return -1 - if desired FPS range is set, fps values - if fixed (old API) fps is set, 0 - failed to
+     * set desired fps
      */
-    public static boolean chooseCameraFpsMoreThen(Camera.Parameters parameters, int minimumFps) {
+    public static int chooseCameraFpsMoreThen(Camera.Parameters parameters, int minimumFps) {
         int[] desiredRange = null;
         List<int[]> supportedRanges = parameters.getSupportedPreviewFpsRange();
         for (int[] range : supportedRanges)
@@ -120,17 +161,17 @@ public class CameraUtils {
 
         if (desiredRange != null) {
             parameters.setPreviewFpsRange(desiredRange[0], desiredRange[1]);
-            return true;
+            return -1;
         }
 
         List<Integer> supportedFps = parameters.getSupportedPreviewFrameRates();
         Integer maxFps = Collections.max(supportedFps);
         if (maxFps > minimumFps) {
             parameters.setPreviewFrameRate(maxFps);
-            return true;
-        } else {
-            return false;
+            return maxFps;
         }
+
+        return 0;
     }
 
     /**

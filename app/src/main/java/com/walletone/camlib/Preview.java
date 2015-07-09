@@ -1,4 +1,4 @@
-package com.example.cam;
+package com.walletone.camlib;
 
 /**
  * @author Jose Davis Nidhin

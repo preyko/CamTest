@@ -1,4 +1,4 @@
-package com.example.cam;
+package com.walletone.camlib;
 
 import android.app.Activity;
 import android.graphics.ImageFormat;
@@ -15,7 +15,7 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
-import com.example.cam.util.FPSCounter;
+import com.walletone.camlib.util.FPSCounter;
 
 import java.io.File;
 

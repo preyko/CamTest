@@ -1,4 +1,4 @@
-package com.example.cam.util;
+package com.walletone.camlib.util;
 
 /**
  * Utility class to measure performance in frames per second. This can be useful for camera 

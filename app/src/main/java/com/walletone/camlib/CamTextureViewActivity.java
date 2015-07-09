@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.cam;
+package com.walletone.camlib;
 
 import android.app.Activity;
 import android.graphics.SurfaceTexture;
@@ -29,7 +29,7 @@ import android.view.TextureView;
 import android.view.Window;
 import android.view.WindowManager;
 
-import com.example.cam.util.FPSCounter;
+import com.walletone.camlib.util.FPSCounter;
 
 import java.io.IOException;
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.cam.gles;
+package com.walletone.camlib.gles;
 
 import android.graphics.SurfaceTexture;
 import android.view.Surface;

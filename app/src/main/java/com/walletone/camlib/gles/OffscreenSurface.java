@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.cam.gles;
+package com.walletone.camlib.gles;
 
 /**
  * Off-screen EGL surface (pbuffer).

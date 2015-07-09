@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.cam;
+package com.walletone.camlib;
 
 import android.app.AlertDialog;
 import android.content.DialogInterface;
@@ -26,8 +26,10 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemSelectedListener;
@@ -39,20 +41,20 @@ import android.app.Activity;
 import android.graphics.SurfaceTexture;
 import android.hardware.Camera;
 
-import com.example.cam.gles.FullFrameRect;
-import com.example.cam.gles.GlUtil;
-import com.example.cam.gles.Texture2dProgram;
-import com.example.cam.util.FPSCounter;
+import com.walletone.camlib.gles.FullFrameRect;
+import com.walletone.camlib.gles.GlUtil;
+import com.walletone.camlib.gles.Texture2dProgram;
+import com.walletone.camlib.util.FPSCounter;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.List;
 
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
-import static com.example.cam.CamTestLib.TextureConvertMethod;
-import static com.example.cam.CamTestLib.TextureConvertMode;
+import static android.hardware.Camera.*;
 
 /**
  * Shows the camera preview on screen while simultaneously recording it to a .mp4 file.
@@ -160,6 +162,11 @@ public class CameraCaptureActivity extends Activity
     private Spinner mConvertMethodSpinner;
     private Spinner mConvertModeSpinner;
 
+    // Camera preview support description
+    private String mSupportedPreviewSizes = "";
+    private String mSupportedPreviewFps = "";
+
+
     private File createDir(String dirName) {
         File sdCard = Environment.getExternalStorageDirectory();
         File dir = new File(sdCard.getAbsolutePath() + "/" + dirName);
@@ -177,7 +184,7 @@ public class CameraCaptureActivity extends Activity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
+        // requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         setContentView(R.layout.activity_camera_capture);
@@ -211,23 +218,23 @@ public class CameraCaptureActivity extends Activity
         mConvertMethodSpinner = (Spinner) findViewById(R.id.convert_method_spinner);
 
         // Setup convert methods in spinner
-        TextureConvertMethod[] spinnerValues;
+        CamTestLib.TextureConvertMethod[] spinnerValues;
         if (currentGlesVersion >= 0x30000) {
-            spinnerValues = TextureConvertMethod.values();
+            spinnerValues = CamTestLib.TextureConvertMethod.values();
         } else {
             spinnerValues =
-                    new TextureConvertMethod[] { TextureConvertMethod.FBO,
-                                                            TextureConvertMethod.RFBO };
+                    new CamTestLib.TextureConvertMethod[] { CamTestLib.TextureConvertMethod.FBO,
+                                                            CamTestLib.TextureConvertMethod.RFBO };
         }
-        mConvertMethodSpinner.setAdapter(new ArrayAdapter<TextureConvertMethod>(
+        mConvertMethodSpinner.setAdapter(new ArrayAdapter<CamTestLib.TextureConvertMethod>(
                 this, android.R.layout.simple_list_item_1, spinnerValues));
         // mConvertMethodSpinner.setOnItemSelectedListener(this);
         mConvertMethodSpinner.setVisibility(View.GONE);
 
         // Setup convert modes in spinner
         mConvertModeSpinner = (Spinner) findViewById(R.id.convert_mode_spinner);
-        mConvertModeSpinner.setAdapter(new ArrayAdapter<TextureConvertMode>(
-                this, android.R.layout.simple_list_item_1, TextureConvertMode.values()));
+        mConvertModeSpinner.setAdapter(new ArrayAdapter<CamTestLib.TextureConvertMode>(
+                this, android.R.layout.simple_list_item_1, CamTestLib.TextureConvertMode.values()));
         mConvertModeSpinner.setOnItemSelectedListener(this);
 
         /*
@@ -273,6 +280,34 @@ public class CameraCaptureActivity extends Activity
         mGLView.setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
 
         Log.d(TAG, "onCreate complete: " + this);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.camera_capture_activity_menu, menu);
+
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.supported_preview_fps:
+                new AlertDialog.Builder(this).
+                        setTitle("FPS").
+                        setMessage(mSupportedPreviewFps).
+                        show();
+                break;
+            case R.id.supported_preview_sizes:
+                new AlertDialog.Builder(this).
+                        setTitle("Preview size").
+                        setMessage(mSupportedPreviewSizes).
+                        show();
+                break;
+        }
+
+        return true;
     }
 
     @Override
@@ -324,7 +359,7 @@ public class CameraCaptureActivity extends Activity
     public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
         switch (parent.getId()) {
             case R.id.convert_method_spinner: {
-                final TextureConvertMethod method = (TextureConvertMethod)
+                final CamTestLib.TextureConvertMethod method = (CamTestLib.TextureConvertMethod)
                         mConvertMethodSpinner.getSelectedItem();
 
                 if (method == null)
@@ -338,7 +373,7 @@ public class CameraCaptureActivity extends Activity
                 });
             } break;
             case R.id.convert_mode_spinner: {
-                final TextureConvertMode mode = (TextureConvertMode)
+                final CamTestLib.TextureConvertMode mode = (CamTestLib.TextureConvertMode)
                         mConvertModeSpinner.getSelectedItem();
 
                 if (mode == null)
@@ -366,10 +401,7 @@ public class CameraCaptureActivity extends Activity
             throw new RuntimeException("camera already initialized");
         }
 
-        Camera.CameraInfo info = new Camera.CameraInfo();
-
-
-        mCamera = Camera.open(); // opens first back-facing camera
+        mCamera = open(); // opens first back-facing camera
         if (mCamera == null) {
             throw new RuntimeException("Unable to open camera");
         }
@@ -383,8 +415,6 @@ public class CameraCaptureActivity extends Activity
             // Give the camera a hint that we're recording video.  This can have a big
             // impact on frame rate.
             parms.setRecordingHint(true);
-
-            // leave the frame rate set to default
             mCamera.setParameters(parms);
         }
 
@@ -393,26 +423,77 @@ public class CameraCaptureActivity extends Activity
 
         CameraUtils.choosePreviewSize(parameters, desiredWidth, desiredHeight);
 
-        CameraUtils.chooseCameraFpsMoreThen(parameters, minimumFps);
+        int fpsChooseRes = CameraUtils.chooseCameraFpsMoreThen(parameters, minimumFps);
 
         mCamera.setParameters(parameters);
 
 
-        int[] fpsRange = new int[2];
         Camera.Size mCameraPreviewSize = parameters.getPreviewSize();
-        parameters.getPreviewFpsRange(fpsRange);
         String previewFacts = mCameraPreviewSize.width + "x" + mCameraPreviewSize.height;
-        if (fpsRange[0] == fpsRange[1]) {
-            previewFacts += " @" + (fpsRange[0] / 1000.0) + "fps";
-        } else {
-            previewFacts += " @[" + (fpsRange[0] / 1000.0) +
-                    " - " + (fpsRange[1] / 1000.0) + "] fps";
+
+        int[] fpsRange = new int[2];
+        if (fpsChooseRes == -1) {
+            parameters.getPreviewFpsRange(fpsRange);
+            if (fpsRange[0] == fpsRange[1]) {
+                previewFacts += " @" + (fpsRange[0] / 1000.0) + "fps";
+            } else {
+                previewFacts += " @[" + (fpsRange[0] / 1000.0) +
+                        " - " + (fpsRange[1] / 1000.0) + "] fps";
+            }
+        } else if (fpsChooseRes != 0) {
+            previewFacts += " @" + fpsChooseRes + "fps";
         }
+
         TextView text = (TextView) findViewById(R.id.cameraParams_text);
         text.setText(previewFacts);
 
         mCameraPreviewWidth = mCameraPreviewSize.width;
         mCameraPreviewHeight = mCameraPreviewSize.height;
+
+        {
+            mSupportedPreviewSizes = "Supported sizes:\n";
+            List<Camera.Size> supportedSizes = mCamera.getParameters().getSupportedPreviewSizes();
+            for (Camera.Size size : supportedSizes) {
+                mSupportedPreviewSizes += size.width + "x" + size.height;
+                if (size.equals(mCameraPreviewSize))
+                    mSupportedPreviewSizes += " [current] \n";
+                else
+                    mSupportedPreviewSizes += "\n";
+            }
+
+            mSupportedPreviewFps = "Supported FPS ranges: \n";
+            List<int[]> supportedFpsRange = mCamera.getParameters().getSupportedPreviewFpsRange();
+            for (int[] range : supportedFpsRange) {
+                mSupportedPreviewFps += range[0] + " - " + range[1];
+
+                if (fpsChooseRes == -1) {
+                    if (range[0] == fpsRange[0] && range[1] == fpsRange[1])
+                        mSupportedPreviewFps += " [current] \n";
+                    else
+                        mSupportedPreviewFps += "\n";
+                }
+            }
+
+            mSupportedPreviewFps += "Supported fixed FPS: \n";
+            List<Integer> supportedFixedFps = mCamera.getParameters().getSupportedPreviewFrameRates();
+            for (Integer fps : supportedFixedFps) {
+                mSupportedPreviewFps += fps;
+                if (fpsChooseRes > 0 && fps == fpsChooseRes)
+                    mSupportedPreviewFps += " [current] \n";
+                else
+                    mSupportedPreviewFps += "\n";
+            }
+        }
+
+        text.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                new AlertDialog.Builder(CameraCaptureActivity.this).
+                        setTitle("Camera info").
+                        setMessage(mSupportedPreviewSizes + mSupportedPreviewFps).
+                        show();
+            }
+        });
     }
 
     /**
@@ -438,39 +519,18 @@ public class CameraCaptureActivity extends Activity
                 mRenderer.changeRecordingState(mRecordingEnabled);
             }
         });
-        // updateControls();
     }
 
-//    /**
-//     * onClick handler for "rebind" checkbox.
-//     */
-//    public void clickRebindCheckbox(View unused) {
-//        CheckBox cb = (CheckBox) findViewById(R.id.rebindHack_checkbox);
-//        TextureRender.sWorkAroundContextProblem = cb.isChecked();
-//    }
 
-//    /**
-//     * Updates the on-screen controls to reflect the current state of the app.
-//     */
-//    private void updateControls() {
-//        Button toggleRelease = (Button) findViewById(R.id.toggleRecording_button);
-//        int id = mRecordingEnabled ?
-//                R.string.toggleRecordingOff : R.string.toggleRecordingOn;
-//        toggleRelease.setText(id);
-//
-//        //CheckBox cb = (CheckBox) findViewById(R.id.rebindHack_checkbox);
-//        //cb.setChecked(TextureRender.sWorkAroundContextProblem);
-//    }
-
-    private void handleModeReady(TextureConvertMode mode) {
-        ArrayAdapter<TextureConvertMode> adapter =
-                (ArrayAdapter<TextureConvertMode>) mConvertModeSpinner.getAdapter();
+    private void handleModeReady(CamTestLib.TextureConvertMode mode) {
+        ArrayAdapter<CamTestLib.TextureConvertMode> adapter =
+                (ArrayAdapter<CamTestLib.TextureConvertMode>) mConvertModeSpinner.getAdapter();
         mConvertModeSpinner.setSelection(adapter.getPosition(mode));
     }
 
-    private void handleMethodReady(TextureConvertMethod method) {
-        ArrayAdapter<TextureConvertMethod> adapter =
-                (ArrayAdapter<TextureConvertMethod>) mConvertMethodSpinner.getAdapter();
+    private void handleMethodReady(CamTestLib.TextureConvertMethod method) {
+        ArrayAdapter<CamTestLib.TextureConvertMethod> adapter =
+                (ArrayAdapter<CamTestLib.TextureConvertMethod>) mConvertMethodSpinner.getAdapter();
         mConvertMethodSpinner.setSelection(adapter.getPosition(method));
     }
 
@@ -582,11 +642,11 @@ public class CameraCaptureActivity extends Activity
                     activity.handleCurrentPT(holder.processing_time);
                     break;
                 case MSG_SET_CURRENT_METHOD:
-                    TextureConvertMethod method = TextureConvertMethod.values()[inputMessage.arg1];
+                    CamTestLib.TextureConvertMethod method = CamTestLib.TextureConvertMethod.values()[inputMessage.arg1];
                     activity.handleMethodReady(method);
                     break;
                 case MSG_SET_CURRENT_MODE:
-                    TextureConvertMode mode = TextureConvertMode.values()[inputMessage.arg1];
+                    CamTestLib.TextureConvertMode mode = CamTestLib.TextureConvertMode.values()[inputMessage.arg1];
                     activity.handleModeReady(mode);
                     break;
                 default:
@@ -624,10 +684,10 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
     private int mRecordingStatus;
     private int mFrameCount;
 
-    private TextureConvertMethod mCurrentConvertMethod = TextureConvertMethod.RFBO;
+    private CamTestLib.TextureConvertMethod mCurrentConvertMethod = CamTestLib.TextureConvertMethod.RFBO;
     private boolean mConvertMethodChanged = true;
 
-    private TextureConvertMode mCurrentConvertMode = TextureConvertMode.LRTBStride;
+    private CamTestLib.TextureConvertMode mCurrentConvertMode = CamTestLib.TextureConvertMode.LRTBStripe;
     private boolean mConvertModeChanged = true;
 
     // width/height of the incoming camera preview frames
@@ -705,12 +765,12 @@ class CameraSurfaceRenderer implements GLSurfaceView.Renderer {
      * Changes the method that we're use to convert texture
      * @param method - texture convert method
      */
-    public void changeTextureConvertMethod(TextureConvertMethod method) {
+    public void changeTextureConvertMethod(CamTestLib.TextureConvertMethod method) {
         mCurrentConvertMethod = method;
         mConvertMethodChanged = true;
     }
 
-    public void changeTextureConvertMode(TextureConvertMode mode) {
+    public void changeTextureConvertMode(CamTestLib.TextureConvertMode mode) {
         mCurrentConvertMode = mode;
         mConvertModeChanged = true;
     }

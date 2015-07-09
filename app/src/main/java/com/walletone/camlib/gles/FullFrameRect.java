@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.example.cam.gles;
+package com.walletone.camlib.gles;
 
 /**
  * This class essentially represents a viewport-sized sprite that will be rendered with
